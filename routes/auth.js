@@ -14,4 +14,12 @@ router.post('/signup', authController.postSignup);
 
 router.post('/logout', authController.postLogout);
 
+router.get('/pwd-reset', authController.getPwdReset);
+
+router.post('/pwd-reset', authController.postPwdReset);
+
+router.get('/pwd-change/:pwdResetToken', authController.getPwdChange);
+
+router.post('/pwd-change', authController.postPwdChange);
+
 module.exports = router;

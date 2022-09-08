@@ -60,11 +60,14 @@ exports.postEditProduct = (req, res, next) => {
   } = req.body;
 
   console.log(req.body);
-
   console.log('productId:', productId);
 
   Product
-    .findById(productId)
+    // .findById(productId) // only creator of the product can edit it
+    .findOne({
+      _id: productId,
+      userId: req.user.id
+    })
     .then((product) => {
       console.log('found product:');
       console.log(product);
@@ -81,7 +84,7 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.find()
+  Product.find({ userId:  req.user._id})
     .then((products) => {
       res.render('admin/products', {
         prods: products,
@@ -95,7 +98,11 @@ exports.getProducts = (req, res, next) => {
 exports.postDeleteProduct = (req, res, next) => {
   const { productId } = req.body;
 
-  Product.deleteOne({ _id: productId })
+  Product
+    .deleteOne ({
+      _id: productId,
+      userId: req.user.id // only creator of the product can delete it
+    })
     .then(() => {
       res.redirect('/admin/products');
     })

@@ -14,21 +14,20 @@
       <div class="user-message user-message--success"><%= successMsg %></div>
       <% } %>
 
-      <form class="login-form" action="/login" method="POST">
-        <div class="form-control">
-          <label for="email">Email</label>
-          <input type="email" name="email" id="email">
-        </div>
+      <form class="login-form" action="/pwd-change" method="POST">
         <div class="form-control">
           <label for="password">Password</label>
           <input type="password" name="password" id="password">
         </div>
+        <div class="form-control">
+          <label for="password">Confirm Password</label>
+          <input type="password" name="confirmPassword" id="confirmPassword">
+        </div>
         <input type="hidden" value="<%= csrfToken %>" name="_csrf">
-        <button class="btn" type="submit">Login</button>
+        <input type="hidden" value="<%= pwdResetToken %>" name="pwdResetToken">
+        <input type="hidden" value="<%= userId %>" name="userId">
+        <button class="btn" type="submit">Update Password</button>
       </form>
-      <div class="centered">
-        <a href="/pwd-reset">Reset Password</a>
-      </div>
     </main>
 
 <%- include('../includes/end.ejs') %>

@@ -3,7 +3,7 @@ const Product = require('../models/product');
 exports.getProducts = (req, res, next) => {
   Product
     .find()
-    .populate('userId')
+    // .populate('userId') // is it needed?
     .then((products) => {
       res.render('shop/product-list', {
         prods: products,
@@ -50,6 +50,9 @@ exports.getCart = (req, res, next) => {
   req.user
     .populate('cart.items.productId')
     .then((user) => {
+      // console.log('populated user:'); //dktodo: debug only
+      // console.log(JSON.stringify(user, null, 2));
+
       res.render('shop/cart', {
         path: '/cart',
         pageTitle: 'Your Cart',
