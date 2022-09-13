@@ -1,16 +1,44 @@
 const Product = require('../models/product');
+const { validationResult } = require('express-validator');
 
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
     pageTitle: 'Add Product',
     path: '/admin/add-product',
     editing: false,
+    fieldsWithValidationErrors: [],
+    product: {
+      title: '',
+      price: null,
+      description: '',
+      imageUrl: ''
+    }
   });
 };
 
 exports.postAddProduct = (req, res, next) => {
   const { title, price, description, imageUrl } = req.body;
   const { userId } = req.session;
+
+  // Finds the validation errors in this request and wraps them in an object with handy functions
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log(errors.array());
+    return res.status(400)
+      .render('admin/edit-product', {
+        pageTitle: 'Add Product',
+        path: '/admin/add-product',
+        editing: false,
+        errorMsg: errors.array()[0].msg,
+        fieldsWithValidationErrors: errors.array().map((error) => error.param),
+        product: {
+          title,
+          price,
+          description,
+          imageUrl
+        }
+      });
+  }
 
   const product = new Product({
     title,
@@ -45,6 +73,7 @@ exports.getEditProduct = (req, res, next) => {
         path: '/admin/edit-product',
         editing: editMode,
         product: product,
+        fieldsWithValidationErrors: [],
       });
     })
     .catch((err) => console.log(err));
@@ -61,6 +90,27 @@ exports.postEditProduct = (req, res, next) => {
 
   console.log(req.body);
   console.log('productId:', productId);
+
+  // Finds the validation errors in this request and wraps them in an object with handy functions
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log(errors.array());
+    return res.status(400)
+      .render('admin/edit-product', {
+        pageTitle: 'Edit Product',
+        path: '/admin/edit-product',
+        editing: true,
+        errorMsg: errors.array()[0].msg,
+        fieldsWithValidationErrors: errors.array().map((error) => error.param),
+        product: {
+          title,
+          price,
+          description,
+          imageUrl,
+          _id: productId
+        }
+      });
+  }
 
   Product
     // .findById(productId) // only creator of the product can edit it

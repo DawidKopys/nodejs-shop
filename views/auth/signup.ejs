@@ -11,18 +11,42 @@
       <div class="user-message user-message--error"><%= errorMsg %></div>
       <% } %>
       
-      <form class="login-form" action="/signup" method="POST">
+      <form class="login-form" action="/signup" method="POST" novalidate>
         <div class="form-control">
           <label for="email">E-Mail</label>
-          <input type="email" name="email" id="email">
+          <input
+            type="email"
+            name="email"
+            id="email"
+            <% if (locals.email) { %>
+              value="<%= email %>"
+            <% } %> 
+            <% if (fieldsWithValidationErrors.includes('email')) { %>
+              class="error"
+            <% } %>
+          >
         </div>
         <div class="form-control">
           <label for="password">Password</label>
-          <input type="password" name="password" id="password">
+          <input 
+            type="password"
+            name="password"
+            id="password"
+            <% if (fieldsWithValidationErrors.includes('password')) { %>
+              class="error"
+            <% } %>
+          >
         </div>
         <div class="form-control">
           <label for="confirmPassword">Confirm Password</label>
-          <input type="password" name="confirmPassword" id="confirmPassword">
+          <input
+            type="password"
+            name="confirmPassword"
+            id="confirmPassword"
+            <% if (fieldsWithValidationErrors.includes('password')) { %>
+              class="error"
+            <% } %>
+          >
         </div>
         <input type="hidden" value="<%= csrfToken %>" name="_csrf">
         <button class="btn" type="submit">Signup</button>

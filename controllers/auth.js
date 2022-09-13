@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 const sendgridTransport = require('nodemailer-sendgrid-transport');
+const { validationResult } = require('express-validator');
 
 const User = require('../models/user');
 
@@ -12,16 +13,34 @@ const transporter = nodemailer.createTransport(sendgridTransport({
 }));
 
 exports.getLogin = (req, res, next) => {
+  const { email } = req.query;
+
   res.render('auth/login', {
     pageTitle: 'Login',
     path: '/login',
     errorMsg: req.flash('error'),
     successMsg: req.flash('success'),
+    email: email,
+    fieldsWithValidationErrors: []
   });
 };
 
 exports.postLogin = (req, res, next) => {
   const { email, password } = req.body;
+
+  // Finds the validation errors in this request and wraps them in an object with handy functions
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log(errors.array());
+    return res.status(400)
+      .render('auth/login', {
+        pageTitle: 'Login',
+        path: '/login',
+        errorMsg: errors.array()[0].msg,
+        email: email,
+        fieldsWithValidationErrors: errors.array().map((error) => error.param)
+      });
+  }
   
   User.findOne({ email: email })
     .then((user) => {
@@ -30,7 +49,8 @@ exports.postLogin = (req, res, next) => {
         console.log('WRONG EMAIL');
         req.flash('error', 'Incorrect email or password.');
         return req.session.save(() => {
-          res.redirect('/login');
+          const emailParam = encodeURIComponent(email);
+          res.redirect(`/login?email=${emailParam}`);
         });
       }
 
@@ -42,7 +62,8 @@ exports.postLogin = (req, res, next) => {
             console.log('WRONG PASSWORD');
             req.flash('error', 'Incorrect email or password.');
             return req.session.save(() => {
-              res.redirect('/login');
+              const emailParam = encodeURIComponent(email);
+              res.redirect(`/login?email=${emailParam}`);
             });
           }
 
@@ -71,64 +92,59 @@ exports.getSignup = (req, res, next) => {
     pageTitle: 'Signup',
     path: '/signup',
     errorMsg: req.flash('error'),
+    fieldsWithValidationErrors: []
   });
 }
 
 exports.postSignup = (req, res, next) => {
-  const { email, password, confirmPassword } = req.body;
-
-  if (password !== confirmPassword) {
-    req.flash('error', 'Passwords don\'t match.');
-    return req.session.save(() => {
-      res.redirect('/signup');
-    });
+  const { email, password } = req.body;
+  
+  // Finds the validation errors in this request and wraps them in an object with handy functions
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    console.log(errors.array());
+    return res.status(400)
+      .render('auth/signup', {
+        pageTitle: 'Signup',
+        path: '/signup',
+        errorMsg: errors.array()[0].msg,
+        email: email,
+        fieldsWithValidationErrors: errors.array().map((error) => error.param)
+      });
   }
   
-  User
-    .findOne({ email: email })
-    .then((user) => {
-      if (user) {
-        // this email is already used by another user
-        console.log('THIS EMAIL IS ALREADY USED');
-        req.flash('error', 'This email is already in use.');
-        return req.session.save(() => {
-          res.redirect('/signup');
-        });
-      }
+  bcrypt
+    .hash(password, 12)
+    .then((hashedPassword) => {
+      const newUser = new User({
+        email: email,
+        password: hashedPassword,
+        cart: {
+          items: [],
+        },
+      });
 
-      return bcrypt
-        .hash(password, 12)
-        .then((hashedPassword) => {
-          const newUser = new User({
-            email: email,
-            password: hashedPassword,
-            cart: {
-              items: [],
-            },
-          });
-    
-          return newUser.save();
-        })
-        .then(() => {
-          const emailMsg = {
-            to: email,
-            from: 'dawid.kopys95@gmail.com',
-            subject: 'signup succeeded',
-            html: '<h1>You successfully signed up!</h1>'
-          };
+      return newUser.save();
+    })
+    .then(() => {
+      const emailMsg = {
+        to: email,
+        from: 'dawid.kopys95@gmail.com',
+        subject: 'signup succeeded',
+        html: '<h1>You successfully signed up!</h1>'
+      };
 
-          return transporter.sendMail(emailMsg);
-        })
-        // .catch() {} // jesli wyslanie maila sie nie powiedzie to
-        // user nie bedzie mogl dokonczyc rejestracji, wypadaloby cos z tym zrobic
-        // ale w sumie my tu nie mamy signup confirmation wiec wyjebane
-        .then((info) => {
-          console.log(info);
-          req.flash('success', 'Sign up successful.');
-          req.session.save(() => {
-            res.redirect('/login');
-          });
-        })
+      return transporter.sendMail(emailMsg);
+    })
+    // .catch() {} // jesli wyslanie maila sie nie powiedzie to
+    // user nie bedzie mogl dokonczyc rejestracji, wypadaloby cos z tym zrobic
+    // ale w sumie my tu nie mamy signup confirmation wiec wyjebane
+    .then((info) => {
+      console.log(info);
+      req.flash('success', 'Sign up successful.');
+      req.session.save(() => {
+        res.redirect('/login');
+      });
     })
     .catch((err) => {
       console.log(err);
