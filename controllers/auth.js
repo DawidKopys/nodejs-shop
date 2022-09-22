@@ -75,9 +75,7 @@ exports.postLogin = (req, res, next) => {
           });
         });
     })
-    .catch((err) => {
-      console.log(err);
-    });
+    .catch(next);
 };
 
 exports.postLogout = (req, res, next) => {
@@ -146,9 +144,7 @@ exports.postSignup = (req, res, next) => {
         res.redirect('/login');
       });
     })
-    .catch((err) => {
-      console.log(err);
-    });
+    .catch(next);
 }
 
 exports.getPwdReset = (req, res, next) => {
@@ -206,7 +202,8 @@ exports.postPwdReset = (req, res, next) => {
             });
           })
       })
-      .catch((err) => console.log(err));
+      .catch(next);
+
   })
 }
 
@@ -279,5 +276,6 @@ exports.postPwdChange = (req, res, next) => {
         res.redirect('/login');
       })
     })
-    .catch((err) => console.log(err));
+    .catch(next);
+
   }

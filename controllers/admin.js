@@ -1,5 +1,6 @@
 const Product = require('../models/product');
 const { validationResult } = require('express-validator');
+const { default: mongoose } = require('mongoose');
 
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
@@ -23,7 +24,6 @@ exports.postAddProduct = (req, res, next) => {
   // Finds the validation errors in this request and wraps them in an object with handy functions
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    console.log(errors.array());
     return res.status(400)
       .render('admin/edit-product', {
         pageTitle: 'Add Product',
@@ -51,11 +51,9 @@ exports.postAddProduct = (req, res, next) => {
   product
     .save()
     .then(() => {
-      res.redirect('/admin/products');
+      return res.redirect('/admin/products');
     })
-    .catch(err => {
-      console.log(err);
-    });
+    .catch(next)
 };
 
 exports.getEditProduct = (req, res, next) => {
@@ -76,7 +74,8 @@ exports.getEditProduct = (req, res, next) => {
         fieldsWithValidationErrors: [],
       });
     })
-    .catch((err) => console.log(err));
+    .catch(next);
+
 };
 
 exports.postEditProduct = (req, res, next) => {
@@ -130,7 +129,8 @@ exports.postEditProduct = (req, res, next) => {
     .then(() => {
       res.redirect('/admin/products');
     })
-    .catch((err) => console.log(err));
+    .catch(next);
+
 };
 
 exports.getProducts = (req, res, next) => {
@@ -142,7 +142,8 @@ exports.getProducts = (req, res, next) => {
         path: '/admin/products',
       });
     })
-    .catch((err) => console.log(err));
+    .catch(next);
+
 };
 
 exports.postDeleteProduct = (req, res, next) => {
@@ -156,5 +157,6 @@ exports.postDeleteProduct = (req, res, next) => {
     .then(() => {
       res.redirect('/admin/products');
     })
-    .catch((err) => console.log(err));
+    .catch(next);
+
 };
