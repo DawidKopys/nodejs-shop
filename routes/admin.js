@@ -1,5 +1,17 @@
 const express = require('express');
 const { body } = require('express-validator');
+const multer = require('multer');
+
+const multerStorage = multer.diskStorage({
+  destination: './public/images/uploads',
+  filename: function (req, file, cb) {
+    const [filename, extension] = file.originalname.split('.');
+    const newFilename = `${filename}${Date.now()}.${extension}`;
+    cb(null, newFilename);
+  }
+})
+
+const upload = multer({ storage: multerStorage });
 
 const adminController = require('../controllers/admin');
 const isAuthenticated = require('../middleware/is-auth');
@@ -14,15 +26,16 @@ router.get('/products', isAuthenticated, adminController.getProducts);
 
 // // /admin/add-product => POST
 router.post('/add-product',
+  upload.single('image'),
   isAuthenticated,
   body('title')
     .isLength({ min: 2 })
     .withMessage('The title must be at least 2 characters long')
     .trim(),
-  body('imageUrl')
-    .trim()
-    .isURL()
-    .withMessage('Image URL must be a valid URL'),
+  // body('imageUrl')
+  //   .trim()
+  //   .isURL()
+  //   .withMessage('Image URL must be a valid URL'),
   body('price')
     .trim()
     .isFloat({ min: 0 })

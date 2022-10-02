@@ -1,6 +1,5 @@
 const Product = require('../models/product');
 const { validationResult } = require('express-validator');
-const { default: mongoose } = require('mongoose');
 
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
@@ -18,8 +17,12 @@ exports.getAddProduct = (req, res, next) => {
 };
 
 exports.postAddProduct = (req, res, next) => {
-  const { title, price, description, imageUrl } = req.body;
+  const { title, price, description } = req.body;
+  const image = req.file;
   const { userId } = req.session;
+
+  console.log('image:');
+  console.log(image);
 
   // Finds the validation errors in this request and wraps them in an object with handy functions
   const errors = validationResult(req);
@@ -34,8 +37,7 @@ exports.postAddProduct = (req, res, next) => {
         product: {
           title,
           price,
-          description,
-          imageUrl
+          description
         }
       });
   }
@@ -44,7 +46,7 @@ exports.postAddProduct = (req, res, next) => {
     title,
     price,
     description,
-    imageUrl,
+    image,
     userId,
   });
 
@@ -86,9 +88,6 @@ exports.postEditProduct = (req, res, next) => {
     description,
     imageUrl,
   } = req.body;
-
-  console.log(req.body);
-  console.log('productId:', productId);
 
   // Finds the validation errors in this request and wraps them in an object with handy functions
   const errors = validationResult(req);
