@@ -1,3 +1,5 @@
+const path = require('node:path')
+const fs = require('node:fs/promises')
 const Product = require('../models/product');
 const { validationResult } = require('express-validator');
 
@@ -10,8 +12,7 @@ exports.getAddProduct = (req, res, next) => {
     product: {
       title: '',
       price: null,
-      description: '',
-      imageUrl: ''
+      description: ''
     }
   });
 };
@@ -21,10 +22,8 @@ exports.postAddProduct = (req, res, next) => {
   const image = req.file;
   const { userId } = req.session;
 
-  console.log('image:');
-  console.log(image);
-
-  // Finds the validation errors in this request and wraps them in an object with handy functions
+  // Finds the validation errors in this request and wraps
+  // ... them in an object with handy functions
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400)
@@ -33,7 +32,8 @@ exports.postAddProduct = (req, res, next) => {
         path: '/admin/add-product',
         editing: false,
         errorMsg: errors.array()[0].msg,
-        fieldsWithValidationErrors: errors.array().map((error) => error.param),
+        fieldsWithValidationErrors: 
+          errors.array().map((error) => error.param),
         product: {
           title,
           price,
@@ -42,11 +42,12 @@ exports.postAddProduct = (req, res, next) => {
       });
   }
 
+  const imagePath = image.path;
   const product = new Product({
     title,
     price,
     description,
-    image,
+    imagePath: `/${imagePath}`,
     userId,
   });
 
@@ -86,10 +87,11 @@ exports.postEditProduct = (req, res, next) => {
     title,
     price,
     description,
-    imageUrl,
   } = req.body;
+  const image = req.file;
 
-  // Finds the validation errors in this request and wraps them in an object with handy functions
+  // Finds the validation errors in this request and wraps
+  // ... them in an object with handy functions
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     console.log(errors.array());
@@ -99,12 +101,12 @@ exports.postEditProduct = (req, res, next) => {
         path: '/admin/edit-product',
         editing: true,
         errorMsg: errors.array()[0].msg,
-        fieldsWithValidationErrors: errors.array().map((error) => error.param),
+        fieldsWithValidationErrors:
+          errors.array().map((error) => error.param),
         product: {
           title,
           price,
           description,
-          imageUrl,
           _id: productId
         }
       });
@@ -117,19 +119,28 @@ exports.postEditProduct = (req, res, next) => {
       userId: req.user.id
     })
     .then((product) => {
-      console.log('found product:');
-      console.log(product);
+      let imagePath;
+      if (image?.path) {
+        imagePath = `/${image?.path}`;
+        // remove old file
+        const currentImagePath = path.join(process.cwd(), product.imagePath)
+        fs.rm(currentImagePath)
+          .then(() => console.log('old file removed!'))
+          .catch((err) => console.log('error while removing old file:', err))
+      } else {
+        imagePath = product.imagePath;
+      }
+      
       product.title = title;
       product.price = price;
       product.description = description;
-      product.imageUrl = imageUrl;
+      product.imagePath = imagePath;
       return product.save();
     })
     .then(() => {
       res.redirect('/admin/products');
     })
     .catch(next);
-
 };
 
 exports.getProducts = (req, res, next) => {
@@ -148,6 +159,7 @@ exports.getProducts = (req, res, next) => {
 exports.postDeleteProduct = (req, res, next) => {
   const { productId } = req.body;
 
+  // dktodo: delete product image as well
   Product
     .deleteOne ({
       _id: productId,

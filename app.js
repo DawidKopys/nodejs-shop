@@ -23,6 +23,7 @@ const store = new MongoDBStore({
 });
 
 store.on('error', function(error) {
+  console.log('MongoDBStore error:');
   console.log(error);
 });
 
@@ -35,6 +36,8 @@ const authRoutes = require('./routes/auth');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/public/', express.static(path.join(__dirname, 'public')))
+
 app.use(session({
   secret: 'my secret',
   resave: false,
@@ -74,8 +77,10 @@ app.get('/500', errorController.get500);
 app.use(errorController.get404);
 
 app.use((error, req, res, next) => {
+  console.log('custom express error handler');
   console.error(error);
-  res.redirect('/500');
+  console.log('redirecting to error page');
+  res.redirect('/');
 })
 
 mongoose
