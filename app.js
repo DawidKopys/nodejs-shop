@@ -77,6 +77,7 @@ app.get('/500', errorController.get500);
 app.use(errorController.get404);
 
 app.use((error, req, res, next) => {
+  // dktodo: ogarnij status code i zwroc odp rzecz?
   console.log('custom express error handler');
   console.error(error);
   console.log('redirecting to error page');

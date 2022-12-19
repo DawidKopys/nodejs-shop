@@ -1,4 +1,9 @@
+const path = require('node:path')
+const fsPromises = require('node:fs/promises')
+const fs = require('node:fs')
 const Product = require('../models/product');
+const Order = require('../models/order');
+const { pipeline } = require('node:stream');
 
 exports.getProducts = (req, res, next) => {
   Product
@@ -56,7 +61,6 @@ exports.getCart = (req, res, next) => {
       });
     })
     .catch(next);
-
 };
 
 exports.postCart = (req, res, next) => {
@@ -68,7 +72,6 @@ exports.postCart = (req, res, next) => {
       res.redirect('/cart');
     })
     .catch(next);
-
 };
 
 exports.postCartDeleteProduct = (req, res, next) => {
@@ -80,7 +83,6 @@ exports.postCartDeleteProduct = (req, res, next) => {
       res.redirect('/cart');
     })
     .catch(next);
-
 };
 
 exports.postOrder = (req, res, next) => {
@@ -90,7 +92,6 @@ exports.postOrder = (req, res, next) => {
       res.redirect('/orders');
     })
     .catch(next);
-
 };
 
 exports.getOrders = (req, res, next) => {
@@ -109,5 +110,63 @@ exports.getOrders = (req, res, next) => {
       });
     })
     .catch(next);
-
 };
+
+exports.getInvoice = (req, res, next) => {
+  const { orderId } = req.params;
+
+  Order
+    .findOne({
+      _id: orderId,
+      userId: req.user.id
+    })
+    .then((order) => {
+      if (!order) {
+        next(new Error('not found'))
+        return
+      }
+
+      const invoiceFilename = `invoice-${order._id.toString()}.pdf`;
+      const invoicePath = path.join(process.cwd(), 'invoices', invoiceFilename);
+
+      // sol1 - res.sendFile
+      // res.sendFile(invoicePath, {
+      //   headers: {
+      //     'Content-Disposition': `attachment; filename="${invoiceFilename}"`
+      //   }
+      // });
+
+      // sol2 - without res.sendFile()
+      // return fsPromises
+      //   .readFile(invoicePath)
+      //   .then((fileData) => {
+      //     res.setHeader('Content-Type', 'application/pdf');
+      //     res.setHeader(
+      //       'Content-Disposition',
+      //       `attachment; filename="${invoiceFilename}"`
+      //     );
+      //     res.send(fileData);
+      //   });
+
+      // sol3, with streams
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${invoiceFilename}"`
+      );
+      pipeline(
+        fs.createReadStream(invoicePath),
+        res,
+        (err) => {
+          if (err) {
+            throw err
+          }
+          console.log('finished writing');
+        }
+      )
+      // ...and without stream.pipeline:
+      // fs.createReadStream(invoicePath)
+      //   .pipe(res)
+    })
+    .catch(next);
+}
