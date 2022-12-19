@@ -5,6 +5,9 @@ const Product = require('../models/product');
 const Order = require('../models/order');
 const { pipeline } = require('node:stream');
 
+const PDFDocument = require('pdfkit');
+const { objectToValues } = require('sqlstring');
+
 exports.getProducts = (req, res, next) => {
   Product
     .find()
@@ -129,6 +132,31 @@ exports.getInvoice = (req, res, next) => {
       const invoiceFilename = `invoice-${order._id.toString()}.pdf`;
       const invoicePath = path.join(process.cwd(), 'invoices', invoiceFilename);
 
+      // generating pdf invoice dynamically:
+      const pdfDoc = new PDFDocument();
+      pdfDoc.pipe(fs.createWriteStream(invoicePath)); // write to PDF
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="${invoiceFilename}"`
+      );
+      pdfDoc.pipe(res);                               // write to HTTP response
+
+      pdfDoc.fontSize(26).text('Invoice', {
+        underline: true
+      }).moveDown(1);
+
+      let totalPrice = 0;
+      for (item of order.items) {
+        const { product, quantity } = item;
+        totalPrice += product.price * quantity;
+        pdfDoc.fontSize(14).text(`${product.title} - ${quantity} x $${product.price}`);
+      }
+      pdfDoc.moveDown(1)
+      pdfDoc.text(`Total: $${totalPrice}`);
+      pdfDoc.end();
+
+      // reading placeholder invoice below:
       // sol1 - res.sendFile
       // res.sendFile(invoicePath, {
       //   headers: {
@@ -149,21 +177,21 @@ exports.getInvoice = (req, res, next) => {
       //   });
 
       // sol3, with streams
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${invoiceFilename}"`
-      );
-      pipeline(
-        fs.createReadStream(invoicePath),
-        res,
-        (err) => {
-          if (err) {
-            throw err
-          }
-          console.log('finished writing');
-        }
-      )
+      // res.setHeader('Content-Type', 'application/pdf');
+      // res.setHeader(
+      //   'Content-Disposition',
+      //   `attachment; filename="${invoiceFilename}"`
+      // );
+      // pipeline(
+      //   fs.createReadStream(invoicePath),
+      //   res,
+      //   (err) => {
+      //     if (err) {
+      //       throw err
+      //     }
+      //     console.log('finished writing');
+      //   }
+      // )
       // ...and without stream.pipeline:
       // fs.createReadStream(invoicePath)
       //   .pipe(res)
