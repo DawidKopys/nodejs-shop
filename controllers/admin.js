@@ -2,6 +2,7 @@ const path = require('node:path')
 const fs = require('node:fs/promises')
 const Product = require('../models/product');
 const { validationResult } = require('express-validator');
+const deleteFile = require('../util/file')
 
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
@@ -124,9 +125,7 @@ exports.postEditProduct = (req, res, next) => {
         imagePath = `/${image?.path}`;
         // remove old file
         const currentImagePath = path.join(process.cwd(), product.imagePath)
-        fs.rm(currentImagePath)
-          .then(() => console.log('old file removed!'))
-          .catch((err) => console.log('error while removing old file:', err))
+        deleteFile(currentImagePath)
       } else {
         imagePath = product.imagePath;
       }
@@ -159,13 +158,14 @@ exports.getProducts = (req, res, next) => {
 exports.postDeleteProduct = (req, res, next) => {
   const { productId } = req.body;
 
-  // dktodo: delete product image as well
   Product
-    .deleteOne ({
+    .findOneAndDelete({
       _id: productId,
       userId: req.user.id // only creator of the product can delete it
     })
-    .then(() => {
+    .then((product) => {
+      const imagePath = path.join(process.cwd(), product.imagePath)
+      deleteFile(imagePath)
       res.redirect('/admin/products');
     })
     .catch(next);
