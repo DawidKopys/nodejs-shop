@@ -2,7 +2,11 @@ const path = require('node:path')
 const fs = require('node:fs/promises')
 const Product = require('../models/product');
 const { validationResult } = require('express-validator');
+
 const deleteFile = require('../util/file')
+const { buildPager } = require('../util/router.js')
+
+const PRODUCTS_PER_PAGE = 2;
 
 exports.getAddProduct = (req, res, next) => {
   res.render('admin/edit-product', {
@@ -143,16 +147,28 @@ exports.postEditProduct = (req, res, next) => {
 };
 
 exports.getProducts = (req, res, next) => {
-  Product.find({ userId:  req.user._id})
-    .then((products) => {
-      res.render('admin/products', {
-        prods: products,
-        pageTitle: 'Admin Products',
-        path: '/admin/products',
-      });
+  const { page: pageQuery = '1' } = req.query;
+  const page = Number(pageQuery);
+
+  Product.countDocuments({ userId:  req.user._id})
+    .then((productsNumber) => {
+      console.log('productsNumber:'. productsNumber);
+      Product.find({ userId:  req.user._id})
+        .skip(PRODUCTS_PER_PAGE * (page - 1))
+        .limit(PRODUCTS_PER_PAGE)
+        .then((products) => {
+          const totalPages = Math.ceil(productsNumber / PRODUCTS_PER_PAGE);
+          const pager = buildPager(page, totalPages);
+
+          res.render('admin/products', {
+            prods: products,
+            pageTitle: 'Admin Products',
+            path: '/admin/products',
+            pager: pager
+          });
+        })
     })
     .catch(next);
-
 };
 
 exports.postDeleteProduct = (req, res, next) => {

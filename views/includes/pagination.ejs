@@ -1,0 +1,16 @@
+<section class="pagination">
+  <% for (const page of pager) { %>
+    <% if (page.url) { %>
+      <a
+        class="page<% if (page.isActive) { %> active<% } %>"
+        href="<%= page.url %>"
+      >
+        <%= page.label %>
+      </a>
+    <% } else { %>
+      <span class="page">
+        <%= page.label %>
+      </span>
+    <% } %> 
+  <% } %>
+</section>

@@ -1,23 +1,63 @@
-const path = require('node:path')
-const fsPromises = require('node:fs/promises')
-const fs = require('node:fs')
+const path = require('node:path');
+const fsPromises = require('node:fs/promises');
+const fs = require('node:fs');
 const Product = require('../models/product');
 const Order = require('../models/order');
 const { pipeline } = require('node:stream');
 
 const PDFDocument = require('pdfkit');
-const { objectToValues } = require('sqlstring');
+
+const { buildPager } = require('../util/router.js')
+
+const PRODUCTS_PER_PAGE = 2;
+
+exports.getIndex = (req, res, next) => {
+  const { page: pageQuery = '1' } = req.query;
+  const page = Number(pageQuery);
+
+  Product.countDocuments()
+    .then((productsNumber) => {
+      return Product
+        .find()
+        .skip(PRODUCTS_PER_PAGE * (page - 1))
+        .limit(PRODUCTS_PER_PAGE)
+        .then((products) => {
+          const totalPages = Math.ceil(productsNumber / PRODUCTS_PER_PAGE);
+          const pager = buildPager(page, totalPages);
+
+          res.render('shop/index', {
+            prods: products,
+            pageTitle: 'Shop',
+            path: '/',
+            pager: pager
+          });
+        })
+    })
+    .catch(next);
+};
 
 exports.getProducts = (req, res, next) => {
-  Product
-    .find()
-    // .populate('userId') // is it needed?
-    .then((products) => {
-      res.render('shop/product-list', {
-        prods: products,
-        pageTitle: 'All Products',
-        path: '/products',
-      });
+  const { page: pageQuery = '1' } = req.query;
+  const page = Number(pageQuery);
+
+  Product.countDocuments()
+    .then((productsNumber) => {
+      Product
+        .find()
+        .skip(PRODUCTS_PER_PAGE * (page - 1))
+        .limit(PRODUCTS_PER_PAGE)
+        // .populate('userId') // is it needed?
+        .then((products) => {
+          const totalPages = Math.ceil(productsNumber / PRODUCTS_PER_PAGE);
+          const pager = buildPager(page, totalPages);
+
+          res.render('shop/product-list', {
+            prods: products,
+            pageTitle: 'All Products',
+            path: '/products',
+            pager: pager
+          });
+        })
     })
     .catch(next);
 };
@@ -32,19 +72,6 @@ exports.getProduct = (req, res, next) => {
         product: product,
         pageTitle: product.title,
         path: '/products',
-      });
-    })
-    .catch(next);
-};
-
-exports.getIndex = (req, res, next) => {
-  Product
-    .find()
-    .then((products) => {
-      res.render('shop/index', {
-        prods: products,
-        pageTitle: 'Shop',
-        path: '/',
       });
     })
     .catch(next);
