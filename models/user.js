@@ -80,7 +80,6 @@ userSchema.methods.createOrder = function() {
   return this
     .populate('cart.items.productId', '_id title price')
     .then((user) => {
-      // console.log(JSON.stringify(user, null, 2));
       const itemsData = user.cart.items.map((product) => ({
         product: { 
           productId: product.productId._id,

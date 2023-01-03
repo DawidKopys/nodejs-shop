@@ -81,9 +81,6 @@ exports.getCart = (req, res, next) => {
   req.user
     .populate('cart.items.productId')
     .then((user) => {
-      // console.log('populated user:'); //dktodo: debug only
-      // console.log(JSON.stringify(user, null, 2));
-
       res.render('shop/cart', {
         path: '/cart',
         pageTitle: 'Your Cart',
@@ -131,8 +128,6 @@ exports.getOrders = (req, res, next) => {
       // add virtuals (total)
       const ordersData = orders.map(
         (order) => order.toObject({ virtuals: true }));
-
-      // console.log(JSON.stringify(ordersData, null, 2));
       res.render('shop/orders', {
         path: '/orders',
         pageTitle: 'Your Orders',

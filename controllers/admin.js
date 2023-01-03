@@ -152,7 +152,6 @@ exports.getProducts = (req, res, next) => {
 
   Product.countDocuments({ userId:  req.user._id})
     .then((productsNumber) => {
-      console.log('productsNumber:'. productsNumber);
       Product.find({ userId:  req.user._id})
         .skip(PRODUCTS_PER_PAGE * (page - 1))
         .limit(PRODUCTS_PER_PAGE)

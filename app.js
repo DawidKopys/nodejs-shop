@@ -84,9 +84,11 @@ app.use((error, req, res, next) => {
   res.redirect('/');
 })
 
+console.log('Connecting to MongoDB...');
 mongoose
-  .connect(MONGODB_URI)
-  .then(() => {
+.connect(MONGODB_URI)
+.then(() => {
+    console.log('Connected!');
     app.listen(3000, () =>
       console.log('Server is up and running on port 3000!')
     );
