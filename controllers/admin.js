@@ -170,8 +170,8 @@ exports.getProducts = (req, res, next) => {
     .catch(next);
 };
 
-exports.postDeleteProduct = (req, res, next) => {
-  const { productId } = req.body;
+exports.deleteProduct = (req, res, next) => {
+  const { productId } = req.query;
 
   Product
     .findOneAndDelete({
@@ -181,8 +181,22 @@ exports.postDeleteProduct = (req, res, next) => {
     .then((product) => {
       const imagePath = path.join(process.cwd(), product.imagePath)
       deleteFile(imagePath)
-      res.redirect('/admin/products');
+      if (!product) {
+        res.status(404).send({
+          success: false,
+          errorMsg: 'Product Not Found'
+        })
+        return;
+      }
+      res.send({
+        success: true,
+        errorMsg: null
+      })
     })
-    .catch(next);
-
+    .catch((err) => {
+      res.send({
+        success: false,
+        errorMsg: err.message
+      })
+    });
 };

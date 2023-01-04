@@ -75,7 +75,11 @@ router.post('/add-product',
   adminController.postAddProduct
 );
 
-router.get('/edit-product/:productId', isAuthenticated, adminController.getEditProduct);
+router.get(
+  '/edit-product/:productId',
+  isAuthenticated,
+  adminController.getEditProduct
+);
 
 router.post('/edit-product',
   upload.single('image'),
@@ -94,6 +98,10 @@ router.post('/edit-product',
     .withMessage('Description must not be empty'),
     adminController.postEditProduct);
 
-router.post('/delete-product', isAuthenticated, adminController.postDeleteProduct);
+router.delete(
+  '/delete-product',
+  isAuthenticated,
+  adminController.deleteProduct
+);
 
 module.exports = router;
