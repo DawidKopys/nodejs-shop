@@ -6,10 +6,14 @@ const Order = require('../models/order');
 const { pipeline } = require('node:stream');
 
 const PDFDocument = require('pdfkit');
+// This is your test secret API key.
+const STRIPE_SECRET = process.env.STRIPE_SECRET_API_KEY
+const stripe = require('stripe')(STRIPE_SECRET);
 
 const { buildPager } = require('../util/router.js')
 
 const PRODUCTS_PER_PAGE = 2;
+const DOMAIN = 'http://localhost:3000';
 
 exports.getIndex = (req, res, next) => {
   const { page: pageQuery = '1' } = req.query;
@@ -112,7 +116,7 @@ exports.postCartDeleteProduct = (req, res, next) => {
     .catch(next);
 };
 
-exports.postOrder = (req, res, next) => {
+exports.getCheckoutSuccess = (req, res, next) => {
   req.user
     .createOrder()
     .then(() => {
@@ -219,4 +223,49 @@ exports.getInvoice = (req, res, next) => {
       //   .pipe(res)
     })
     .catch(next);
+}
+
+exports.getCheckout = (req, res, next) => {
+  req.user
+    .populate('cart.items.productId')
+    .then((user) => {
+      const totalPrice = user.cart.items.reduce(
+        (accumulator, cartItem) => 
+          accumulator + cartItem.quantity * cartItem.productId.price
+      , 0);
+      
+      res.render('shop/checkout', {
+        pageTitle: 'Checkout',
+        path: '/checkout',
+        products: user.cart.items,
+        totalPrice: totalPrice
+      });
+    })
+    .catch(next);
+  ;
+}
+
+exports.postCreateCheckoutSession = async (req, res, next) => {
+  console.log('postCreateCheckoutSession');
+  const user = await req.user.populate('cart.items.productId');
+  const positions = user.cart.items;
+
+  const session = await stripe.checkout.sessions.create({
+    line_items: positions.map((position) => ({
+      price_data: {
+        currency: 'usd',
+        product_data: {
+          name: position.productId.title,
+          description: position.productId.description
+        },
+        unit_amount: position.productId.price * 100
+      },
+      quantity: position.quantity
+    })),
+    mode: 'payment',
+    success_url: `${DOMAIN}/checkout/success`,
+    cancel_url: `${DOMAIN}/checkout/cancel`
+  });
+
+  res.redirect(303, session.url);
 }

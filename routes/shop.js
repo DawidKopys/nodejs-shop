@@ -17,10 +17,28 @@ router.post('/cart', isAuthenticated, shopController.postCart);
 
 router.post('/cart-delete-item', isAuthenticated, shopController.postCartDeleteProduct);
 
-router.post('/create-order', isAuthenticated, shopController.postOrder);
-
 router.get('/orders', isAuthenticated, shopController.getOrders);
 
 router.get('/orders/:orderId', isAuthenticated, shopController.getInvoice)
+
+router.get('/checkout', isAuthenticated, shopController.getCheckout);
+
+router.post(
+  '/create-checkout-session',
+  isAuthenticated,
+  shopController.postCreateCheckoutSession
+);
+  
+router.get(
+  '/checkout/success',
+  isAuthenticated,
+  shopController.getCheckoutSuccess
+);
+
+router.get(
+  '/checkout/cancel',
+  isAuthenticated,
+  shopController.getCheckout // temp: nie chce nam się tworzyć nowego route'a
+);
 
 module.exports = router;
