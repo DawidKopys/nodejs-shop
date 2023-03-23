@@ -49,7 +49,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/public/', express.static(path.join(__dirname, 'public')))
 
 app.use(session({
-  secret: 'my secret',
+  secret: process.env.SESSION_COOKIE_SECRET,
   resave: false,
   saveUninitialized: false,
   store: store,
