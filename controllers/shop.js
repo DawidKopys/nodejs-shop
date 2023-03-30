@@ -13,7 +13,7 @@ const stripe = require('stripe')(STRIPE_SECRET);
 const { buildPager } = require('../util/router.js')
 
 const PRODUCTS_PER_PAGE = 2;
-const DOMAIN = 'http://localhost:3000';
+const DOMAIN = `http://localhost:${process.env.PORT || 3000}`
 
 exports.getIndex = (req, res, next) => {
   const { page: pageQuery = '1' } = req.query;
@@ -246,7 +246,6 @@ exports.getCheckout = (req, res, next) => {
 }
 
 exports.postCreateCheckoutSession = async (req, res, next) => {
-  console.log('postCreateCheckoutSession');
   const user = await req.user.populate('cart.items.productId');
   const positions = user.cart.items;
 

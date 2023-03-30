@@ -41,7 +41,15 @@ const accessLogStream = fs.createWriteStream(
   { flags: 'a' }
 )
 
-app.use(helmet())
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      'script-src': ['\'self\'', 'js.stripe.com'],
+      'frame-src': ['\'self\'', 'js.stripe.com'],
+      'form-action': ['\'self\'', 'js.stripe.com', 'checkout.stripe.com'],
+    }
+  },
+}))
 app.use(morgan('common', { stream: accessLogStream }))
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
