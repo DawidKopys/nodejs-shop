@@ -41,6 +41,9 @@ const accessLogStream = fs.createWriteStream(
   { flags: 'a' }
 )
 
+console.log('process.env.IS_LOCAL :', process.env.IS_LOCAL)
+console.log('typeof process.env.IS_LOCAL :', typeof process.env.IS_LOCAL)
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {

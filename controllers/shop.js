@@ -13,7 +13,9 @@ const stripe = require('stripe')(STRIPE_SECRET);
 const { buildPager } = require('../util/router.js')
 
 const PRODUCTS_PER_PAGE = 2;
-const DOMAIN = `http://localhost:${process.env.PORT || 3000}`
+const DOMAIN = process.env.IS_LOCAL 
+  ? `http://localhost:${process.env.PORT || 3000}`
+  : 'https://nodejs-shop.fly.dev'
 
 exports.getIndex = (req, res, next) => {
   const { page: pageQuery = '1' } = req.query;
