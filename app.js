@@ -1,4 +1,3 @@
-require('dotenv').config()
 const path = require('path');
 const fs = require('fs')
 
@@ -40,9 +39,6 @@ const accessLogStream = fs.createWriteStream(
   path.join(__dirname, 'access.log'),
   { flags: 'a' }
 )
-
-console.log('process.env.IS_LOCAL :', process.env.IS_LOCAL)
-console.log('typeof process.env.IS_LOCAL :', typeof process.env.IS_LOCAL)
 
 app.use(helmet({
   contentSecurityPolicy: {

@@ -1,0 +1,23 @@
+services:
+  nodejs-shop:
+    build: .
+    ports:
+      - 8080:8080
+    volumes:
+      - booksImages:/usr/src/app/public/images/uploads
+    env_file:
+      - .env
+
+  mongodb:
+    image: mongodb/mongodb-community-server:5.0.16-ubuntu2004
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb-shop:/data/db
+
+volumes:
+  booksImages:
+    external: true
+  mongodb-shop:
+    external: true
+    
